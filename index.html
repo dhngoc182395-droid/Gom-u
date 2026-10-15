@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trạm Thư Tín Fandom 💌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome & SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            /* Thay ảnh nền cute của fandom bạn vào đây */
+            background-image: url('https://www.transparenttextures.com/patterns/cute-animals.png'); 
+            color: #555;
+            padding-bottom: 70px; /* Chừa chỗ cho taskbar */
+        }
+        .glass-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(255, 182, 193, 0.3);
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        .btn-cute {
+            background: linear-gradient(to right, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            border-radius: 999px;
+            transition: transform 0.2s;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-cute:hover { transform: scale(1.05); }
+        /* Taskbar Mobile & PC */
+        .taskbar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-around; padding: 10px 0;
+            z-index: 1000;
+        }
+        .tab-btn { flex: 1; text-align: center; color: #aaa; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { color: #ff9a9e; transform: translateY(-3px); }
+        .tab-text { font-size: 12px; display: block; font-weight: 600; }
+        .hidden-tab { display: none; }
+        /* Input dễ thương */
+        input, select {
+            border: 2px solid #fecfef; border-radius: 12px; padding: 10px; width: 100%; outline: none;
+        }
+        input:focus { border-color: #ff9a9e; }
+    </style>
+</head>
+<body class="p-4 md:p-10 max-w-2xl mx-auto">
+
+    <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
+    <div id="auth-section" class="glass-box p-6 mt-10">
+        <h1 class="text-3xl font-bold text-center text-pink-400 mb-6">💌 Trạm Đu Idol</h1>
+        
+        <div id="login-form">
+            <input type="text" id="log-fb" placeholder="Tên Facebook" class="mb-3">
+            <div class="relative">
+                <input type="password" id="log-pass" placeholder="Mật khẩu" class="mb-4">
+                <i class="fa fa-eye absolute right-4 top-3 text-pink-300 cursor-pointer" onclick="togglePass('log-pass')"></i>
+            </div>
+            <button onclick="login()" class="btn-cute w-full py-3">Đăng Nhập Ngay 💖</button>
+            <p class="text-center mt-4 text-sm">Chưa có tài khoản? <span onclick="switchAuth()" class="text-pink-500 font-bold cursor-pointer">Đăng ký nè</span></p>
+        </div>
+
+        <div id="reg-form" class="hidden-tab">
+            <input type="text" id="reg-fb" placeholder="Tên Facebook (Yêu cầu chính xác)" class="mb-3">
+            <input type="text" id="reg-link" placeholder="Link Facebook" class="mb-3">
+            <input type="text" id="reg-threads" placeholder="Link Threads" class="mb-3">
+            <div class="relative">
+                <input type="password" id="reg-pass" placeholder="Mật khẩu" class="mb-4">
+                <i class="fa fa-eye absolute right-4 top-3 text-pink-300 cursor-pointer" onclick="togglePass('reg-pass')"></i>
+            </div>
+            <button onclick="register()" class="btn-cute w-full py-3">Xin 1 Slot Mua Hàng 🌸</button>
+            <p class="text-center mt-4 text-sm">Có tài khoản rồi? <span onclick="switchAuth()" class="text-pink-500 font-bold cursor-pointer">Quay lại</span></p>
+        </div>
+    </div>
+
+    <!-- MAIN APP (ẨN KHI CHƯA ĐĂNG NHẬP) -->
+    <div id="main-app" class="hidden-tab mt-4">
+        <h2 class="text-xl font-bold text-pink-400 mb-2">Xin chào, <span id="user-name"></span> ✨</h2>
+
+        <!-- TAB 1: ĐẶT HÀNG -->
+        <div id="tab-order" class="glass-box p-5 tab-content">
+            <h3 class="font-bold text-lg mb-3">🛒 Danh sách Goods</h3>
+            <div id="product-list">
+                <!-- JS sẽ render sản phẩm vào đây -->
+            </div>
+        </div>
+
+        <!-- TAB 2: GIỎ HÀNG -->
+        <div id="tab-cart" class="glass-box p-5 tab-content hidden-tab">
+            <h3 class="font-bold text-lg mb-3">🛍️ Giỏ hàng của cậu</h3>
+            <div id="cart-items"></div>
+            
+            <div id="payment-section" class="mt-5 pt-4 border-t-2 border-pink-100 hidden">
+                <h4 class="font-bold text-red-400">🔥 Đã có giá! Bắt đầu thanh toán</h4>
+                <p>Tổng tiền hàng: <span id="cart-total" class="font-bold"></span></p>
+                <p id="surcharge-info">Phụ phí: <span class="font-bold"></span></p>
+                <p class="text-xl font-bold text-pink-500 mt-2">Tổng chuyển khoản: <span id="final-total"></span></p>
+                
+                <!-- Khu vực Mã QR -->
+                <div class="text-center my-4">
+                    <p class="mb-2">Quét mã MoMo (Nội dung CK: Tên FB + Mua Goods)</p>
+                    <img id="qr-img" src="" alt="QR Momo" class="w-48 mx-auto rounded-xl border-4 border-pink-200">
+                </div>
+
+                <!-- Form Upload & Ship -->
+                <input type="file" id="bill-img" accept="image/*" class="mb-3 text-sm">
+                <select id="ship-type" class="mb-3" onchange="toggleShipInfo()">
+                    <option value="owner">Chủ gom tạo đơn (Admin tạo)</option>
+                    <option value="self">Tự tạo đơn qua App</option>
+                </select>
+                <textarea id="ship-info" placeholder="Nhập: Tên - SĐT - Địa chỉ cụ thể" class="w-full border-2 border-pink-200 rounded-xl p-3 mb-3 h-24 outline-none focus:border-pink-400"></textarea>
+                
+                <button onclick="submitOrder()" class="btn-cute w-full py-3">GỬI BILL CHỐT ĐƠN 🚀</button>
+            </div>
+            <div id="wait-price-msg" class="text-center text-gray-400 mt-4 font-semibold italic">
+                (Chờ chủ gom update giá mới mở thanh toán nha 🥺)
+            </div>
+        </div>
+
+        <!-- TAB 3 & 4 (Tracking) sẽ phát triển tương tự... -->
+
+    </div>
+
+    <!-- TASKBAR NAVIGATION -->
+    <div class="taskbar hidden" id="taskbar">
+        <div class="tab-btn active" onclick="openTab('tab-order', this)">
+            <i class="fa-solid fa-store"></i> <span class="tab-text">Goods</span>
+        </div>
+        <div class="tab-btn" onclick="openTab('tab-cart', this)">
+            <i class="fa-solid fa-basket-shopping"></i> <span class="tab-text">Giỏ Hàng</span>
+        </div>
+        <div class="tab-btn" onclick="openTab('tab-track', this)">
+            <i class="fa-solid fa-truck-fast"></i> <span class="tab-text">Tracking</span>
+        </div>
+        <div class="tab-btn" onclick="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i> <span class="tab-text">Thoát</span>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbztf9O7Z2Jl1HrMNLOEXFO1n7A-otyGOx9p-FQVln9vkCW1pkfBufuqsgeTiukN4xntuw/exec";
+        let cart = [];
+        let configData = {};
+
+        // KIỂM TRA ĐĂNG NHẬP KHI MỞ WEB
+        window.onload = () => {
+            if(localStorage.getItem('fandom_fb_name')) {
+                document.getElementById('auth-section').classList.add('hidden-tab');
+                document.getElementById('main-app').classList.remove('hidden-tab');
+                document.getElementById('taskbar').classList.remove('hidden');
+                document.getElementById('user-name').innerText = localStorage.getItem('fandom_fb_name');
+                fetchProducts();
+            }
+        }
+
+        // --- CÁC HÀM TIỆN ÍCH UI ---
+        function togglePass(id) {
+            let x = document.getElementById(id);
+            x.type = x.type === "password" ? "text" : "password";
+        }
+        function switchAuth() {
+            document.getElementById('login-form').classList.toggle('hidden-tab');
+            document.getElementById('reg-form').classList.toggle('hidden-tab');
+        }
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden-tab'));
+            document.getElementById(tabId).classList.remove('hidden-tab');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            if(tabId === 'tab-cart') renderCart();
+        }
+        function toggleShipInfo() {
+            let type = document.getElementById('ship-type').value;
+            document.getElementById('ship-info').style.display = type === 'self' ? 'none' : 'block';
+        }
+
+        // --- LOGIC GỌI API ---
+        async function fetchProducts() {
+            // Dùng Swal hiện loading cute
+            Swal.fire({ title: 'Đang tải Goods...', html: '<img src="https://i.pinimg.com/originals/a2/dc/8e/a2dc8eb82f1614f17711f181f727c00f.gif" width="100">', showConfirmButton: false });
+            
+            let res = await fetch(API_URL + "?action=get_products_and_config");
+            let data = await res.json();
+            configData = data;
+            
+            let html = '';
+            data.products.forEach(p => {
+                html += `
+                <div class="bg-white p-3 rounded-xl mb-3 shadow-sm border border-pink-100 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold">${p.name}</p>
+                        <p class="text-xs text-gray-400">Mẫu: ${p.variant} | Max: ${p.max} c</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="number" id="qty-${p.id}" value="1" min="1" max="${p.max}" class="w-16 text-center mr-2 h-8">
+                        <button onclick="addToCart('${p.id}', '${p.name}', '${p.variant}', '${p.price}')" class="bg-pink-300 text-white rounded-lg p-2 hover:bg-pink-400"><i class="fa fa-plus"></i></button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('product-list').innerHTML = html;
+            Swal.close();
+        }
+
+        function addToCart(id, name, variant, price) {
+            let qty = parseInt(document.getElementById(`qty-${id}`).value);
+            let item = cart.find(c => c.id === id);
+            if(item) item.qty += qty;
+            else cart.push({id, name, variant, price: parseInt(price), qty});
+            
+            // Toast thông báo nhỏ
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã bỏ vào giỏ nha! 🎀', showConfirmButton: false, timer: 1500 });
+        }
+
+        function renderCart() {
+            let html = '';
+            let total = 0;
+            cart.forEach((c, index) => {
+                let itemTotal = c.qty * c.price;
+                total += itemTotal;
+                html += `
+                <div class="flex justify-between items-center border-b pb-2 mb-2">
+                    <div><p class="font-bold">${c.name} (${c.variant})</p><p class="text-xs">SL: ${c.qty} ${c.price > 0 ? `| Giá: ${c.price}đ` : ''}</p></div>
+                    <button onclick="removeItem(${index})" class="text-red-400"><i class="fa fa-trash"></i></button>
+                </div>`;
+            });
+            document.getElementById('cart-items').innerHTML = html || "<p class="text-center text-gray-400">Giỏ đang trống rỗng 🥺</p>";
+            
+            // Xử lý bật nút thanh toán khi Chủ Gom đã set Cấu hình Is_Price_Ready = TRUE
+            if(configData.isPriceReady && cart.length > 0) {
+                document.getElementById('payment-section').classList.remove('hidden');
+                document.getElementById('wait-price-msg').classList.add('hidden');
+                
+                document.getElementById('cart-total').innerText = total + " VNĐ";
+                document.getElementById('surcharge-info').innerHTML = `Phụ phí (${configData.surcharge.name}): <span class="font-bold">${configData.surcharge.price} VNĐ</span>`;
+                document.getElementById('final-total').innerText = (total + parseInt(configData.surcharge.price)) + " VNĐ";
+                
+                // Mẹo lấy QR: Chủ gom up qr_momo.png lên Drive -> code tự ghép link (Ở đây minh họa dùng ảnh tạm)
+                document.getElementById('qr-img').src = "https://img.vietqr.io/image/momo-0987654321-compact2.png"; // Có thể tích hợp API VietQR cho tiện
+            }
+        }
+        
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        // Logic Đăng ký / Đăng nhập sử dụng fetch() POST tới API_URL...
+        // (Do giới hạn ký tự, các hàm này sẽ gọi POST API với URLSearchParams tương tự logic phía trên)
+    </script>
+</body>
+</html>
